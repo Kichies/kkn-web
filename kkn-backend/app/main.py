@@ -32,19 +32,25 @@ app = FastAPI(title="API Manajemen KKN")
 os.makedirs("app/uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
 
+origins = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "https://kkn-web-omega.vercel.app",  
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500", "*"], 
+    allow_origins=origins, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- FUNGSI SULAP BASE64 KE FILE GAMBAR ---
-def process_base64_image(base64_str: str) -> str:
-    """Ubah teks Base64 jadi gambar JPG/PNG dan kembalikan URL-nya"""
+# --- FUNGSI SULAP BASE64 KE FILE GAMBAR (VERSI FIX) ---
+def process_base64_image(base64_str: str, request=None) -> str:
+    """Ubah teks Base64 jadi gambar JPG/PNG dan kembalikan URL yang dinamis"""
     if not base64_str or not base64_str.startswith("data:image"):
-        return base64_str # Kembalikan teks asli jika kosong atau sudah berupa URL
+        return base64_str 
     try:
         header, encoded = base64_str.split(",", 1)
         ext = header.split(";")[0].split("/")[1]
@@ -54,7 +60,10 @@ def process_base64_image(base64_str: str) -> str:
         with open(filepath, "wb") as f:
             f.write(base64.b64decode(encoded))
             
-        return f"http://127.0.0.1:8000/uploads/{filename}"
+        # Menggunakan base_url dari request untuk deteksi domain otomatis
+        # Jika tidak ada request (misal background task), gunakan link Vercel
+        base_url = "https://kkn-web-omega.vercel.app"
+        return f"{base_url}/uploads/{filename}"
     except Exception as e:
         print(f"Gagal memproses gambar: {e}")
         return None
@@ -88,7 +97,7 @@ def append_to_sheet(data_absensi, nama_user):
     except Exception as e:
         print(f"Gagal mengirim ke Google Sheets: {e}")
 
-@app.get("/")
+@app.get("/api/")
 def read_root():
     return {"message": "Selamat datang di API KKN Kades Keren!"}
 

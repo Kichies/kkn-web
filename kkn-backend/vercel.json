@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/app/main.py/$1" },
+    { "source": "/api/(.*)", "destination": "/kkn-backend/app/main.py" },
     { "source": "/(.*)", "destination": "/kkn-frontend/$1" }
   ]
 }
