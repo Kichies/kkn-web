@@ -1,6 +1,8 @@
 {
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/kkn-backend/app/main.py" },
-    { "source": "/(.*)", "destination": "/kkn-frontend/$1" }
+  "builds": [
+    { "src": "app/main.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "app/main.py" }
   ]
 }
