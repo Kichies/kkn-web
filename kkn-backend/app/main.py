@@ -6,11 +6,11 @@ from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# --- TAMBAHAN IMPORT UNTUK FILE UPLOAD ---
 from fastapi.staticfiles import StaticFiles
 import os
 import base64
 import uuid
+import json
 
 from app import models
 from app import schemas
@@ -57,7 +57,17 @@ def process_base64_image(base64_str: str) -> str:
 def append_to_sheet(data_absensi, nama_user):
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("app/credentials.json", scope)
+        
+        google_creds_json = os.getenv("GOOGLE_CREDENTIALS")
+        
+        if not google_creds_json:
+            print("Gagal: Kunci rahasia Google tidak ditemukan di memori!")
+            return
+            
+        creds_dict = json.loads(google_creds_json)
+        
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+
         client = gspread.authorize(creds)
         sheet = client.open("Absensi KKN 2026").worksheet("Data Mentah")
         
