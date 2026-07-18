@@ -7,6 +7,12 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from fastapi import FastAPI
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from fastapi.staticfiles import StaticFiles
 import os
