@@ -94,14 +94,30 @@ def read_root():
 # ==========================================
 # ENDPOINT: ABSENSI (Scan QR Pagi & Malam)
 # ==========================================
+
+# --- KONFIGURASI JAM ABSEN (ubah di sini kalau jadwal berubah) ---
+ABSEN_PAGI_MULAI = 6    # 06:00
+ABSEN_PAGI_SELESAI = 9  # sampai sebelum 09:00
+ABSEN_MALAM_MULAI = 19  # 19:00
+ABSEN_MALAM_SELESAI = 22 # sampai sebelum 22:00
+
 @app.post("/api/absensi/", response_model=schemas.AbsensiResponse, tags=["Absensi"])
 def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)):
     jam = int(absensi.waktu.split(":")[0])
-    
-    if jam < 6:
-        raise HTTPException(status_code=400, detail="Sabar Bos! Absen pagi baru dibuka jam 06:00.")
-    elif 15 <= jam < 20:
-        raise HTTPException(status_code=400, detail="Belum waktunya! Absen malam baru dibuka jam 20:00.")
+
+    dalam_window_pagi = ABSEN_PAGI_MULAI <= jam < ABSEN_PAGI_SELESAI
+    dalam_window_malam = ABSEN_MALAM_MULAI <= jam < ABSEN_MALAM_SELESAI
+
+    if not dalam_window_pagi and not dalam_window_malam:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Absen ditutup! Waktu absen pagi: "
+                f"{ABSEN_PAGI_MULAI:02d}:00-{ABSEN_PAGI_SELESAI:02d}:00, "
+                f"absen malam: {ABSEN_MALAM_MULAI:02d}:00-{ABSEN_MALAM_SELESAI:02d}:00. "
+                f"Kelewat ya berarti gak bisa absen, disiplin dong!"
+            )
+        )
 
     db_absensi = models.Absensi(
         user_id=absensi.user_id,
