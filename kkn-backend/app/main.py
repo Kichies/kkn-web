@@ -2,19 +2,10 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from fastapi import FastAPI
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-from fastapi.staticfiles import StaticFiles
 import os
 import base64
 import uuid
@@ -35,12 +26,13 @@ app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
 origins = [
     "http://127.0.0.1:5500",
     "http://localhost:5500",
-    "https://kkn-web-omega.vercel.app",  
+    "https://kkn-web-omega.vercel.app",
+    "https://websitekknsisdamas118.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, 
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,8 +52,6 @@ def process_base64_image(base64_str: str, request=None) -> str:
         with open(filepath, "wb") as f:
             f.write(base64.b64decode(encoded))
             
-        # Menggunakan base_url dari request untuk deteksi domain otomatis
-        # Jika tidak ada request (misal background task), gunakan link Vercel
         base_url = "https://kkn-web-omega.vercel.app"
         return f"{base_url}/uploads/{filename}"
     except Exception as e:
@@ -106,14 +96,12 @@ def read_root():
 # ==========================================
 @app.post("/api/absensi/", response_model=schemas.AbsensiResponse, tags=["Absensi"])
 def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)):
-    # --- LOGIKA MESIN WAKTU (SATPAM JAM KERJA) ---
     jam = int(absensi.waktu.split(":")[0])
     
     if jam < 6:
         raise HTTPException(status_code=400, detail="Sabar Bos! Absen pagi baru dibuka jam 06:00.")
     elif 15 <= jam < 20:
         raise HTTPException(status_code=400, detail="Belum waktunya! Absen malam baru dibuka jam 20:00.")
-    # ---------------------------------------------
 
     db_absensi = models.Absensi(
         user_id=absensi.user_id,
@@ -144,7 +132,7 @@ def read_absensi(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
 # ==========================================
 @app.post("/api/logbook/", response_model=schemas.LogbookResponse, tags=["Logbook"])
 def create_logbook(logbook: schemas.LogbookCreate, db: Session = Depends(get_db)):
-    foto_url = process_base64_image(logbook.foto) # Panggil fungsi sihir
+    foto_url = process_base64_image(logbook.foto)
     db_logbook = models.Logbook(
         user_id=logbook.user_id,
         kegiatan=logbook.kegiatan,
@@ -190,7 +178,7 @@ def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depend
 # ==========================================
 @app.post("/api/cashflow/", response_model=schemas.CashflowResponse, tags=["Cashflow"])
 def create_cashflow(cashflow: schemas.CashflowCreate, db: Session = Depends(get_db)):
-    struk_url = process_base64_image(cashflow.struk) # Panggil fungsi sihir
+    struk_url = process_base64_image(cashflow.struk)
     db_cashflow = models.Cashflow(
         tipe=cashflow.tipe,
         nominal=cashflow.nominal,

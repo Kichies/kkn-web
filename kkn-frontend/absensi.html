@@ -143,7 +143,9 @@
             };
 
             try {
-                const response = await fetch(`https://kkn-web-omega.vercel.app/api/absensi/`, {                    headers: { 'Content-Type': 'application/json' },
+                const response = await fetch(`https://kkn-web-omega.vercel.app/api/absensi/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
 
