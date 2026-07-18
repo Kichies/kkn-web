@@ -1,14 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "app/main.py",
-      "use": "@vercel/python"
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "app/main.py"
-    }
+    { "source": "/api/(.*)", "destination": "/app/main.py/$1" },
+    { "source": "/(.*)", "destination": "/kkn-frontend/$1" }
   ]
 }

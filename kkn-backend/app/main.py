@@ -95,7 +95,7 @@ def read_root():
 # ==========================================
 # ENDPOINT: ABSENSI (Scan QR Pagi & Malam)
 # ==========================================
-@app.post("/absensi/", response_model=schemas.AbsensiResponse, tags=["Absensi"])
+@app.post("/api/absensi/", response_model=schemas.AbsensiResponse, tags=["Absensi"])
 def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)):
     # --- LOGIKA MESIN WAKTU (SATPAM JAM KERJA) ---
     jam = int(absensi.waktu.split(":")[0])
@@ -126,14 +126,14 @@ def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)
     append_to_sheet(absensi, nama)
     return db_absensi
 
-@app.get("/absensi/", response_model=List[schemas.AbsensiResponse], tags=["Absensi"])
+@app.get("/api/absensi/", response_model=List[schemas.AbsensiResponse], tags=["Absensi"])
 def read_absensi(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     return db.query(models.Absensi).order_by(models.Absensi.id.desc()).offset(skip).limit(limit).all()
 
 # ==========================================
 # ENDPOINT: LOGBOOK (Laporan Malam Hari + Foto)
 # ==========================================
-@app.post("/logbook/", response_model=schemas.LogbookResponse, tags=["Logbook"])
+@app.post("/api/logbook/", response_model=schemas.LogbookResponse, tags=["Logbook"])
 def create_logbook(logbook: schemas.LogbookCreate, db: Session = Depends(get_db)):
     foto_url = process_base64_image(logbook.foto) # Panggil fungsi sihir
     db_logbook = models.Logbook(
@@ -147,11 +147,11 @@ def create_logbook(logbook: schemas.LogbookCreate, db: Session = Depends(get_db)
     db.refresh(db_logbook)
     return db_logbook
 
-@app.get("/logbook/", response_model=List[schemas.LogbookResponse], tags=["Logbook"])
+@app.get("/api/logbook/", response_model=List[schemas.LogbookResponse], tags=["Logbook"])
 def read_logbooks(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     return db.query(models.Logbook).order_by(models.Logbook.id.desc()).offset(skip).limit(limit).all()
 
-@app.delete("/logbook/{id}", tags=["Logbook"])
+@app.delete("/api/logbook/{id}", tags=["Logbook"])
 def delete_logbook(id: int, db: Session = Depends(get_db)):
     item = db.query(models.Logbook).filter(models.Logbook.id == id).first()
     if not item:
@@ -160,7 +160,7 @@ def delete_logbook(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Logbook ID {id} berhasil dihapus"}
 
-@app.put("/logbook/{id}", response_model=schemas.LogbookResponse, tags=["Logbook"])
+@app.put("/api/logbook/{id}", response_model=schemas.LogbookResponse, tags=["Logbook"])
 def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depends(get_db)):
     item = db.query(models.Logbook).filter(models.Logbook.id == id).first()
     if not item:
@@ -179,7 +179,7 @@ def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depend
 # ==========================================
 # ENDPOINT: CASHFLOW (Manajemen Keuangan)
 # ==========================================
-@app.post("/cashflow/", response_model=schemas.CashflowResponse, tags=["Cashflow"])
+@app.post("/api/cashflow/", response_model=schemas.CashflowResponse, tags=["Cashflow"])
 def create_cashflow(cashflow: schemas.CashflowCreate, db: Session = Depends(get_db)):
     struk_url = process_base64_image(cashflow.struk) # Panggil fungsi sihir
     db_cashflow = models.Cashflow(
@@ -195,11 +195,11 @@ def create_cashflow(cashflow: schemas.CashflowCreate, db: Session = Depends(get_
     db.refresh(db_cashflow)
     return db_cashflow
 
-@app.get("/cashflow/", response_model=List[schemas.CashflowResponse], tags=["Cashflow"])
+@app.get("/api/cashflow/", response_model=List[schemas.CashflowResponse], tags=["Cashflow"])
 def read_cashflows(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     return db.query(models.Cashflow).order_by(models.Cashflow.id.desc()).offset(skip).limit(limit).all()
 
-@app.delete("/cashflow/{id}", tags=["Cashflow"])
+@app.delete("/api/cashflow/{id}", tags=["Cashflow"])
 def delete_cashflow(id: int, db: Session = Depends(get_db)):
     item = db.query(models.Cashflow).filter(models.Cashflow.id == id).first()
     if not item:
@@ -208,7 +208,7 @@ def delete_cashflow(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Transaksi ID {id} berhasil dihapus"}
 
-@app.put("/cashflow/{id}", response_model=schemas.CashflowResponse, tags=["Cashflow"])
+@app.put("/api/cashflow/{id}", response_model=schemas.CashflowResponse, tags=["Cashflow"])
 def update_cashflow(id: int, cashflow: schemas.CashflowCreate, db: Session = Depends(get_db)):
     item = db.query(models.Cashflow).filter(models.Cashflow.id == id).first()
     if not item:
@@ -229,7 +229,7 @@ def update_cashflow(id: int, cashflow: schemas.CashflowCreate, db: Session = Dep
 # ==========================================
 # ENDPOINT: PROGRAM KERJA (KANBAN BOARD)
 # ==========================================
-@app.post("/proker/", response_model=schemas.ProkerResponse, tags=["Proker"])
+@app.post("/api/proker/", response_model=schemas.ProkerResponse, tags=["Proker"])
 def create_proker(proker: schemas.ProkerCreate, db: Session = Depends(get_db)):
     db_proker = models.Proker(**proker.dict())
     db.add(db_proker)
@@ -237,11 +237,11 @@ def create_proker(proker: schemas.ProkerCreate, db: Session = Depends(get_db)):
     db.refresh(db_proker)
     return db_proker
 
-@app.get("/proker/", response_model=List[schemas.ProkerResponse], tags=["Proker"])
+@app.get("/api/proker/", response_model=List[schemas.ProkerResponse], tags=["Proker"])
 def read_prokers(db: Session = Depends(get_db)):
     return db.query(models.Proker).order_by(models.Proker.id.desc()).all()
 
-@app.put("/proker/{id}", response_model=schemas.ProkerResponse, tags=["Proker"])
+@app.put("/api/proker/{id}", response_model=schemas.ProkerResponse, tags=["Proker"])
 def update_proker(id: int, proker: schemas.ProkerCreate, db: Session = Depends(get_db)):
     item = db.query(models.Proker).filter(models.Proker.id == id).first()
     if not item: raise HTTPException(status_code=404)
@@ -252,7 +252,7 @@ def update_proker(id: int, proker: schemas.ProkerCreate, db: Session = Depends(g
     return item
 
 # Endpoint khusus kilat untuk Drag-and-Drop
-@app.patch("/proker/{id}/status", tags=["Proker"])
+@app.patch("/api/proker/{id}/status", tags=["Proker"])
 def update_proker_status(id: int, status_update: schemas.ProkerStatusUpdate, db: Session = Depends(get_db)):
     item = db.query(models.Proker).filter(models.Proker.id == id).first()
     if not item: raise HTTPException(status_code=404)
@@ -260,7 +260,7 @@ def update_proker_status(id: int, status_update: schemas.ProkerStatusUpdate, db:
     db.commit()
     return {"message": "Status updated"}
 
-@app.delete("/proker/{id}", tags=["Proker"])
+@app.delete("/api/proker/{id}", tags=["Proker"])
 def delete_proker(id: int, db: Session = Depends(get_db)):
     item = db.query(models.Proker).filter(models.Proker.id == id).first()
     if not item: raise HTTPException(status_code=404)
