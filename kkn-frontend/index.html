@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Manajemen KKN 118</title>
+    
+    <!-- KUNCI PWA 1: Meta Tags & Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2C3D30">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PERBAIKAN: Favicon untuk tab browser desktop dan Apple -->
+    <link rel="icon" type="image/png" href="assets/images/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script src="js/tailwind-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-sagebg text-sagedark font-sans min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <nav class="flex flex-col md:flex-row justify-between items-center py-6 px-8 md:px-16 w-full z-20 relative">
+        <div class="flex items-center gap-2 font-mono font-bold text-lg mb-4 md:mb-0">
+            <img src="assets/images/icon.png" alt="Icon KKN" class="w-20 h-20 rounded-full border border-white/30 shadow-md drop-shadow-sm">
+            <span class="drop-shadow-sm text-white">KKN SISDAMAS 118</span>
+        </div>
+        
+        <div class="flex gap-8 text-sm font-bold text-white/80 mb-4 md:mb-0 drop-shadow-sm">
+            <a href="#" class="hover:text-white transition">Beranda</a>
+            <a href="#" class="hover:text-white transition">Tentang</a>
+            <a href="anggota.html" class="hover:text-white transition">Anggota</a>
+        </div>
+        
+        <div>
+            <!-- TOMBOL LOGIN PENGURUS BARU -->
+            <button onclick="bukaLogin()" id="btnAuth" class="bg-white/90 backdrop-blur-sm text-sagedark font-bold px-6 py-2.5 rounded-full hover:bg-white transition-all shadow-lg border border-white/50 flex items-center gap-2">
+                <span>Area Pengurus</span>
+                <span>🔒</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex flex-col items-center justify-center text-center px-4 mt-8 md:mt-12 z-10 relative">
+        
+        <h1 class="text-4xl md:text-5xl font-mono font-bold leading-tight max-w-2xl text-black mb-6 drop-shadow-lg">
+            Dimana tempat berlabuh <br> disitulah kenangan bebas.
+        </h1>
+        
+        <p class="text-sm md:text-base opacity-95 max-w-xl leading-relaxed mb-16 font-mono text-black font-bold drop-shadow-md">
+            Pusat informasi publik terintegrasi. Pantau program kerja, laporan harian, dan transparansi dana kelompok dalam satu genggaman.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mx-auto w-full mb-20">
+            
+            <div class="bg-white/20 backdrop-blur-md border border-white/40 p-8 rounded-[2rem] flex flex-col items-center text-center h-full shadow-xl hover:-translate-y-2 transition-transform duration-300">
+                <div class="text-4xl mb-4 drop-shadow-none">📔</div>
+                <h3 class="font-mono font-bold text-white text-lg mb-2 drop-shadow-md">Logbook Harian</h3>
+                <p class="text-xs text-white/90 leading-relaxed mb-6 font-medium">Arsip kegiatan harian dan rekap absensi kehadiran anggota kelompok.</p>
+                <a href="logbook.html" class="mt-auto bg-white/90 text-sagedark px-5 py-2 rounded-full font-bold shadow-sm hover:bg-white transition w-full">
+                    Lihat Logbook &rarr;
+                </a>
+            </div>
+
+            <div class="bg-white/20 backdrop-blur-md border border-white/40 p-8 rounded-[2rem] flex flex-col items-center text-center h-full shadow-xl hover:-translate-y-2 transition-transform duration-300">
+                <div class="text-4xl mb-4 drop-shadow-none">💸</div>
+                <h3 class="font-mono font-bold text-white text-lg mb-2 drop-shadow-md">Catatan Keuangan</h3>
+                <p class="text-xs text-white/90 leading-relaxed mb-6 font-medium">Transparansi pemasukan, pengeluaran, serta bukti struk belanja kelompok.</p>
+                <a href="cashflow.html" class="mt-auto bg-white/90 text-sagedark px-5 py-2 rounded-full font-bold shadow-sm hover:bg-white transition w-full">
+                    Lihat Keuangan &rarr;
+                </a>
+            </div>
+
+            <div class="bg-white/20 backdrop-blur-md border border-white/40 p-8 rounded-[2rem] flex flex-col items-center text-center h-full shadow-xl hover:-translate-y-2 transition-transform duration-300">
+                <div class="text-4xl mb-4 drop-shadow-none">🍃</div>
+                <h3 class="font-mono font-bold text-white text-lg mb-2 drop-shadow-md">Program Kerja</h3>
+                <p class="text-xs text-white/90 leading-relaxed mb-6 font-medium">Pantau status to-do, progress, dan hasil akhir program kerja posko.</p>
+                <a href="proker.html" class="mt-auto bg-white/90 text-sagedark px-5 py-2 rounded-full font-bold shadow-sm hover:bg-white transition w-full">
+                    Lihat Proker &rarr;
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL LOGIN PENGURUS SEDERHANA -->
+    <div id="modalLogin" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <div class="w-full max-w-sm bg-white/90 backdrop-blur-xl border border-white p-8 rounded-[2.5rem] shadow-2xl relative transition-all duration-500 scale-95" id="modalCardLogin">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-sagedark/10 rounded-3xl mb-4 border border-sagedark/5">
+                    <span class="text-3xl">🔑</span>
+                </div>
+                <h2 class="text-xl font-mono font-bold text-sagedark">Akses Pengurus</h2>
+                <p class="text-xs text-sagedark/70 mt-1">Masukkan kata sandi untuk mode edit.</p>
+            </div>
+            
+            <input type="password" id="passwordInput" placeholder="Kata Sandi..." class="w-full bg-white border border-sagedark/20 p-4 rounded-2xl focus:outline-none focus:border-sagedark text-sagedark font-bold shadow-inner mb-4 text-center tracking-widest">
+            
+            <div class="flex gap-3">
+                <button onclick="tutupLogin()" class="w-1/2 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-2xl hover:bg-gray-200 transition-all text-sm">Batal</button>
+                <button onclick="prosesLogin()" class="w-1/2 bg-sagedark text-white font-bold py-3.5 rounded-2xl hover:bg-black transition-all shadow-lg text-sm">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // KUNCI PWA 2: Mendaftarkan Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA Service Worker Aktif!', reg.scope))
+                    .catch(err => console.log('PWA Gagal:', err));
+            });
+        }
+
+        // LOGIKA KARCIS VIP (LOGIN)
+        const modal = document.getElementById('modalLogin');
+        const modalCard = document.getElementById('modalCardLogin');
+        const btnAuth = document.getElementById('btnAuth');
+
+        // Cek apakah sudah login sebelumnya
+        if (localStorage.getItem('kkn_vip_access') === 'true') {
+            btnAuth.innerHTML = '<span>Mode Admin Aktif</span><span>🔓</span>';
+            btnAuth.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+            btnAuth.onclick = prosesLogout;
+        }
+
+        function bukaLogin() {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-95');
+        }
+
+        function tutupLogin() {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalCard.classList.add('scale-95');
+            document.getElementById('passwordInput').value = '';
+        }
+
+        function prosesLogin() {
+            const pass = document.getElementById('passwordInput').value;
+            if (pass === '190726OK') {
+                localStorage.setItem('kkn_vip_access', 'true');
+                alert("Berhasil masuk! Mode Admin diaktifkan.");
+                window.location.reload();
+            } else {
+                alert("Sandi salah, Bos!");
+            }
+        }
+
+        function prosesLogout() {
+            if(confirm("Keluar dari Mode Admin?")) {
+                localStorage.removeItem('kkn_vip_access');
+                window.location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

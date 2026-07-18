@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Absensi Harian KKN</title>
+
+    <link rel="icon" type="image/png" href="assets/images/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="js/tailwind-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-sagebg text-sagedark font-sans min-h-screen flex flex-col p-4 md:p-6 overflow-x-hidden relative">
+
+    <nav class="w-full max-w-sm mx-auto mb-6 flex justify-start z-10 pt-4">
+        <a href="index.html" class="text-sagedark font-bold bg-white/80 backdrop-blur-md px-5 py-2 rounded-full hover:bg-white transition-all shadow-sm border border-white/50 flex items-center gap-2">
+            &larr; Kembali
+        </a>
+    </nav>
+
+    <main class="w-full max-w-sm mx-auto my-auto bg-white/40 backdrop-blur-lg border border-white/60 p-8 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] relative z-10 transition-all duration-500" id="mainCard">
+        
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/60 rounded-2xl shadow-sm mb-4 border border-white/50">
+                <span class="text-3xl" id="ikonSapaan">☀️</span>
+            </div>
+            <h1 class="text-2xl font-mono font-bold text-sagedark tracking-tight drop-shadow-sm" id="teksSapaan">Jangan Lupa Absen Bray!</h1>
+            <p class="text-sm text-sagedark/80 mt-1 font-medium">Sok diisi yah.</p>
+        </div>
+
+        <form id="formAbsensi" class="space-y-6">
+            <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 pl-2">Identitas Asli</label>
+                <div class="relative">
+                    <select id="userId" class="w-full appearance-none bg-white/60 backdrop-blur-sm border border-white/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/80 text-sagedark font-semibold transition-all shadow-sm" required>
+                    <option value="" disabled selected>Pilih nama Anda...</option>
+                    <option value="1">Muhammad Fathurrohman Al-Hanif</option>
+                    <option value="2">Anindya Nasywa Hatimi</option>
+                    <option value="3">Reva Azzahra Anggraini</option>
+                    <option value="4">Davina Zahra Audita</option>
+                    <option value="5">Hardi</option>
+                    <option value="6">Nayla</option>
+                    <option value="7">Muhammad Rivanza Hakim</option>
+                    <option value="8">Amanda Putri Dwirani</option>
+                    <option value="9">Alya Rahma</option>
+                    <option value="10">Muhammad Akmal Fadillah</option>
+                    <option value="11">Moch Rifqi Jauhari Fuadi</option>
+                    <option value="12">Vera Wati Handayani</option>
+                    <option value="13">Azalea Gandhini Azzahra</option>
+                    <option value="14">Apriyani</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-sagedark">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 pl-2">Kondisi Hari Ini</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="relative flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border border-white/50 p-4 rounded-2xl cursor-pointer hover:bg-white/70 transition-all has-[:checked]:border-blue-400 has-[:checked]:bg-white/90 group shadow-sm">
+                        <input type="radio" name="status" value="Hadir" class="peer hidden" required>
+                        <span class="text-xl mb-1 group-has-[:checked]:scale-110 transition-transform">🔥</span>
+                        <span class="font-bold text-sm text-sagedark">Hadir</span>
+                    </label>
+
+                    <label class="relative flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border border-white/50 p-4 rounded-2xl cursor-pointer hover:bg-white/70 transition-all has-[:checked]:border-blue-400 has-[:checked]:bg-white/90 group shadow-sm">
+                        <input type="radio" name="status" value="Izin" class="peer hidden">
+                        <span class="text-xl mb-1 group-has-[:checked]:scale-110 transition-transform">✈️</span>
+                        <span class="font-bold text-sm text-sagedark">Izin</span>
+                    </label>
+
+                    <label class="relative flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border border-white/50 p-4 rounded-2xl cursor-pointer hover:bg-white/70 transition-all has-[:checked]:border-red-500 has-[:checked]:bg-white/90 group shadow-sm">
+                        <input type="radio" name="status" value="Sakit" class="peer hidden">
+                        <span class="text-xl mb-1 group-has-[:checked]:scale-110 transition-transform">💊</span>
+                        <span class="font-bold text-sm text-sagedark">Sakit</span>
+                    </label>
+
+                    <label class="relative flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm border border-white/50 p-4 rounded-2xl cursor-pointer hover:bg-white/70 transition-all has-[:checked]:border-red-500 has-[:checked]:bg-white/90 group shadow-sm">
+                        <input type="radio" name="status" value="Alfa" class="peer hidden">
+                        <span class="text-xl mb-1 group-has-[:checked]:scale-110 transition-transform">👻</span>
+                        <span class="font-bold text-sm text-sagedark">Alfa</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" class="w-full bg-sagedark/90 backdrop-blur-md text-white font-bold py-4 rounded-2xl hover:bg-sagedark active:scale-[0.98] transition-all shadow-lg flex justify-center items-center gap-2 border border-sagedark">
+                    <span>Kirim Absen</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </form>
+
+        <div id="pesanSukses" class="hidden flex-col items-center justify-center py-8 text-center animate-[fadeIn_0.5s_ease-out]">
+            <div class="w-20 h-20 bg-white text-green-600 rounded-full flex items-center justify-center mb-6 shadow-md border border-green-100">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-2xl font-mono font-bold text-sagedark mb-2 drop-shadow-sm">Masuk Pak Eko!</h2>
+            <p class="text-sagedark/90 text-sm px-4 font-medium">Data kamu udah mendarat cantik di Google Sheets. Silakan tutup halaman ini.</p>
+        </div>
+    </main>
+
+    <script>
+        // Sihir kecil untuk ganti ikon dan teks tergantung jam buka web
+        const jamSekarang = new Date().getHours();
+        if (jamSekarang >= 15) {
+            document.getElementById('ikonSapaan').innerText = '🌙';
+            document.getElementById('teksSapaan').innerText = 'Absen dulu yap, sebelum tidur!';
+        }
+
+        document.getElementById('formAbsensi').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const form = this;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalContent = submitBtn.innerHTML;
+            
+            submitBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Mengirim...
+            `;
+            submitBtn.disabled = true;
+
+            const now = new Date();
+            const waktuLokal = now.toTimeString().split(' ')[0]; 
+            const tanggalLokal = now.toISOString().split('T')[0]; 
+
+            const formData = {
+                user_id: parseInt(document.getElementById('userId').value),
+                status_kehadiran: document.querySelector('input[name="status"]:checked').value,
+                waktu: waktuLokal,
+                tanggal: tanggalLokal
+            };
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/absensi/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    form.classList.add('hidden');
+                    document.getElementById('pesanSukses').classList.remove('hidden');
+                    document.getElementById('pesanSukses').classList.add('flex');
+                    document.getElementById('mainCard').classList.remove('bg-white/40');
+                    document.getElementById('mainCard').classList.add('border-green-400', 'bg-green-50/60');
+                } else {
+                    // --- PERUBAHAN: Menangkap pesan penolakan dari Backend ---
+                    const errorData = await response.json();
+                    alert("Gagal: " + errorData.detail);
+                    submitBtn.innerHTML = originalContent;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Servernya lagi ngambek. Pastikan backend jalan!");
+                submitBtn.innerHTML = originalContent;
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

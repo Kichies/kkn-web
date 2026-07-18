@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logbook KKN</title>
+    
+    <link rel="icon" type="image/png" href="assets/images/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="js/tailwind-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-sagebg text-sagedark font-sans min-h-screen flex flex-col relative overflow-x-hidden p-4 md:p-6">
+
+    <nav class="w-full max-w-5xl mx-auto mb-8 flex justify-between items-center flex-wrap gap-4 z-10 pt-2">
+        <a href="index.html" class="text-sagedark font-bold bg-white/80 backdrop-blur-md px-5 py-2.5 rounded-full hover:bg-white transition-all shadow-sm border border-white/50 flex items-center gap-2">
+            &larr; Kembali ke Dashboard
+        </a>
+        <button onclick="downloadCSV('logbook')" class="bg-white/80 backdrop-blur-md text-sagedark font-bold px-5 py-2.5 rounded-full hover:bg-white transition-all shadow-sm border border-white/50">
+            📥 Download Rekap CSV
+        </button>
+    </nav>
+
+    <main class="flex-grow w-full max-w-5xl mx-auto z-10 flex flex-col">
+        
+        <div class="mb-8 text-center md:text-left text-white drop-shadow-md">
+            <h1 class="text-3xl md:text-4xl font-mono font-bold mb-2">Logbook Harian</h1>
+            <p class="text-sm opacity-95 font-bold">Dokumentasikan narasi kegiatan serta progres riil di lapangan.</p>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-8 flex-grow">
+            <!-- KOLOM KIRI: Form Logbook (Diberi ID untuk Satpam Virtual) -->
+            <div id="formKolom" class="bg-white/40 backdrop-blur-lg border border-white/60 p-8 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] w-full md:w-1/2 h-fit transition-all duration-500">
+                <div class="mb-6">
+                    <h2 class="text-xl font-mono font-bold mb-1 text-sagedark">Tulis Laporan</h2>
+                    <p class="text-xs text-sagedark/80 font-medium">Ceritakan apa saja yang sukses dieksekusi kelompok hari ini.</p>
+                </div>
+
+                <form id="formLogbook" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 mb-2 pl-2">Nama Anggota</label>
+                        <div class="relative">
+                            <select id="userId" class="w-full appearance-none bg-white/60 backdrop-blur-sm border border-white/50 p-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/80 text-sagedark font-semibold transition-all shadow-sm" required>
+                                <option value="" disabled selected>Pilih nama Anda...</option>
+                                <option value="1">Hanif (Ketua)</option>
+                                <option value="2">Anin (Sekretaris)</option>
+                                <option value="3">Reva (Bendahara)</option>
+                                <option value="4">Davina (PDD)</option>
+                                <option value="5">Hardi (PDD)</option>
+                                <option value="6">Nhay (PDD)</option>
+                                <option value="7">Rivanza (Acara)</option>
+                                <option value="8">Amanda (Acara)</option>
+                                <option value="9">Alya (Acara)</option>
+                                <option value="10">Akmal (Humlog + Wakordes)</option>
+                                <option value="11">Rifqi (Humlog)</option>
+                                <option value="12">Vera (Humlog)</option>
+                                <option value="13">Azel (Konsumsi)</option>
+                                <option value="14">Apriyani (Konsumsi)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-sagedark">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 mb-2 pl-2">Tanggal Kegiatan</label>
+                        <input type="date" id="tanggal" class="w-full bg-white/60 backdrop-blur-sm border border-white/50 p-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/80 text-sagedark font-semibold shadow-sm transition-all" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 mb-2 pl-2">Cerita Kegiatan Hari Ini</label>
+                        <textarea id="kegiatan" rows="4" placeholder="Contoh: Mengadakan koordinasi dengan kepala desa terkait..." class="w-full bg-white/60 backdrop-blur-sm border border-white/50 p-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/80 text-sagedark font-medium shadow-sm transition-all resize-none" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 mb-2 pl-2">Bukti Foto Dokumentasi (Opsional)</label>
+                        <input type="file" id="fotoKegiatan" accept="image/*" class="w-full bg-white/60 backdrop-blur-sm border border-white/50 p-2 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-sagedark file:text-white hover:file:bg-black transition cursor-pointer shadow-sm text-sagedark">
+                    </div>
+
+                    <button type="submit" class="w-full bg-sagedark/90 backdrop-blur-md text-white font-bold py-3.5 rounded-xl hover:bg-sagedark transition shadow-lg mt-6 border border-sagedark">
+                        Simpan Laporan Harian 🚀
+                    </button>
+                </form>
+            </div>
+
+            <!-- KOLOM KANAN: Riwayat Laporan (Diberi ID untuk Satpam Virtual) -->
+            <div id="listKolom" class="w-full md:w-1/2 flex flex-col transition-all duration-500">
+                <div class="bg-white/40 backdrop-blur-lg border border-white/60 p-6 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] flex-grow max-h-[660px] flex flex-col">
+                    <div class="flex justify-between items-center mb-4 border-b border-sagedark/20 pb-2">
+                        <h3 class="font-mono font-bold text-base text-sagedark">Riwayat Laporan</h3>
+                        <span id="totalEntri" class="bg-sagedark text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-sm">0 Entri</span>
+                    </div>
+                    
+                    <div id="logbookList" class="flex flex-col gap-4 overflow-y-auto pr-2">
+                        <p class="text-center text-xs text-sagedark/60 py-4 font-bold">Sedang memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- HTML MODAL EDIT -->
+    <div id="modalEditLogbook" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <main class="w-full max-w-sm bg-white/90 backdrop-blur-xl border border-white p-8 rounded-[2.5rem] shadow-2xl relative transition-all duration-500 scale-95" id="modalCard">
+            
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-sagedark/10 rounded-2xl mb-3 border border-sagedark/5">
+                    <span class="text-2xl">✏️</span>
+                </div>
+                <h1 class="text-xl font-mono font-bold text-sagedark tracking-tight">Edit Laporan</h1>
+            </div>
+
+            <form id="formEditLogbook" class="space-y-4">
+                <input type="hidden" id="editLogbookId">
+                
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Nama Anggota</label>
+                    <div class="relative">
+                        <select id="editUserId" class="w-full appearance-none bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold transition-all shadow-sm text-sm" required>
+                            <option value="1">Hanif (Ketua)</option>
+                            <option value="2">Anin (Sekretaris)</option>
+                            <option value="3">Reva (Bendahara)</option>
+                            <option value="4">Davina (PDD)</option>
+                            <option value="5">Hardi (PDD)</option>
+                            <option value="6">Nhay (PDD)</option>
+                            <option value="7">Rivanza (Acara)</option>
+                            <option value="8">Amanda (Acara)</option>
+                            <option value="9">Alya (Acara)</option>
+                            <option value="10">Akmal (Humlog + Wakordes)</option>
+                            <option value="11">Rifqi (Humlog)</option>
+                            <option value="12">Vera (Humlog)</option>
+                            <option value="13">Azel (Konsumsi)</option>
+                            <option value="14">Apriyani (Konsumsi)</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-sagedark">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Tanggal Kegiatan</label>
+                    <input type="date" id="editTanggal" class="w-full bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold shadow-sm transition-all text-sm" required>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Cerita Kegiatan</label>
+                    <textarea id="editKegiatan" rows="4" class="w-full bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-medium shadow-sm transition-all resize-none text-sm leading-relaxed" required></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="closeModalEdit()" class="w-1/2 bg-gray-100 text-gray-700 font-bold py-3 rounded-2xl hover:bg-gray-200 transition-all text-sm">Batal</button>
+                    <button type="submit" class="w-1/2 bg-sagedark text-white font-bold py-3 rounded-2xl hover:bg-black transition-all shadow-lg text-sm">Simpan</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('tanggal').valueAsDate = new Date();
+        const apiBaseUrl = 'http://127.0.0.1:8000';
+
+        // 🔒 SATPAM VIRTUAL: Cek Hak Akses
+        const isAdmin = localStorage.getItem('kkn_vip_access') === 'true';
+
+        // Jika bukan admin, sembunyikan form input dan perlebar list riwayat
+        if (!isAdmin) {
+            document.getElementById('formKolom').style.display = 'none';
+            document.getElementById('listKolom').classList.remove('md:w-1/2');
+            document.getElementById('listKolom').classList.add('w-full');
+        }
+
+        const usersMap = { 
+            1: "Hanif (Ketua)", 2: "Anin (Sekretaris)", 3: "Reva (Bendahara)", 
+            4: "Davina (PDD)", 5: "Hardi (PDD)", 6: "Nhay (PDD)", 
+            7: "Rivanza (Acara)", 8: "Amanda (Acara)", 9: "Alya (Acara)", 
+            10: "Akmal (Humlog + Wakordes)", 11: "Rifqi (Humlog)", 12: "Vera (Humlog)", 
+            13: "Azel (Konsumsi)", 14: "Apriyani (Konsumsi)" 
+        };
+
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function loadData() {
+            const listContainer = document.getElementById('logbookList');
+            const totalSpan = document.getElementById('totalEntri');
+            
+            try {
+                const response = await fetch(`${apiBaseUrl}/logbook/`);
+                if (!response.ok) throw new Error("Gagal");
+                
+                const data = await response.json();
+                totalSpan.innerText = `${data.length} Entri`;
+                listContainer.innerHTML = ''; 
+
+                if (data.length === 0) {
+                    listContainer.innerHTML = `<p class="text-center text-xs text-sagedark/60 py-4 font-bold">Belum ada logbook tercatat.</p>`;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const namaUser = usersMap[item.user_id] || `User #${item.user_id}`;
+                    const imgTag = item.foto ? `<img src="${item.foto}" alt="Bukti" class="w-full h-40 object-cover rounded-xl mt-3 border border-white/50 shadow-inner">` : '';
+
+                    // 🔒 Sembunyikan tombol Edit/Delete jika bukan admin
+                    const actionButtons = isAdmin ? `
+                        <div class="flex gap-2 bg-white/50 px-2 py-1.5 rounded-lg border border-sagedark/10 shadow-sm">
+                            <button onclick="editData(${item.id})" class="hover:scale-110 transition text-xs" title="Edit">✏️</button>
+                            <button onclick="hapusData(${item.id})" class="hover:scale-110 transition text-xs" title="Hapus">🗑️</button>
+                        </div>
+                    ` : '';
+
+                    const card = `
+                        <div class="bg-white/70 backdrop-blur-sm border border-white/40 p-4 rounded-2xl shadow-sm border-l-4 border-sagedark relative transition hover:bg-white/90">
+                            <div class="flex justify-between items-start mb-1">
+                                <h4 class="font-bold text-sagedark text-sm">${namaUser}</h4>
+                                ${actionButtons}
+                            </div>
+                            <p class="text-[10px] text-sagedark/60 mb-2 font-semibold">${item.tanggal}</p>
+                            <p class="text-xs text-sagedark font-medium leading-relaxed">${item.kegiatan}</p>
+                            ${imgTag}
+                        </div>
+                    `;
+                    listContainer.innerHTML += card;
+                });
+            } catch (error) {
+                listContainer.innerHTML = `<p class="text-center text-salmon text-xs py-4 font-bold">Gagal memuat data dari server.</p>`;
+            }
+        }
+
+        document.getElementById('formLogbook').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerText = "Menyimpan...";
+            submitBtn.disabled = true;
+
+            const fotoInput = document.getElementById('fotoKegiatan');
+            let fotoBase64 = null;
+            if (fotoInput.files.length > 0) {
+                fotoBase64 = await convertFileToBase64(fotoInput.files[0]);
+            }
+
+            const formData = {
+                user_id: parseInt(document.getElementById('userId').value),
+                tanggal: document.getElementById('tanggal').value,
+                kegiatan: document.getElementById('kegiatan').value,
+                foto: fotoBase64 
+            };
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/logbook/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert("Logbook berhasil disimpan!");
+                    e.target.reset(); 
+                    document.getElementById('tanggal').valueAsDate = new Date(); 
+                    loadData(); 
+                } else {
+                    alert("Gagal menyimpan data.");
+                }
+            } catch (error) {
+                alert("Gagal menghubungi server.");
+            } finally {
+                submitBtn.innerText = "Simpan Laporan Harian 🚀";
+                submitBtn.disabled = false;
+            }
+        });
+
+        async function hapusData(id) {
+            if (confirm(`Yakin ingin menghapus laporan logbook ID ${id}? Tindakan ini permanen.`)) {
+                try {
+                    const response = await fetch(`${apiBaseUrl}/logbook/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        alert("Laporan berhasil dihapus.");
+                        loadData(); 
+                    } else {
+                        alert("Gagal menghapus data dari server.");
+                    }
+                } catch (error) {
+                    alert("Server backend ngambek. Gagal menghapus.");
+                }
+            }
+        }
+
+        const modal = document.getElementById('modalEditLogbook');
+        const modalCard = document.getElementById('modalCard');
+
+        async function editData(id) {
+            try {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modalCard.classList.remove('scale-95');
+
+                listContainer = document.getElementById('logbookList');
+                originalCard = listContainer.querySelector(`button[onclick="editData(${id})"]`).closest('.bg-white\\/70');
+                
+                document.getElementById('editLogbookId').value = id;
+                const namaTeks = originalCard.querySelector('h4').innerText;
+                let foundId = 1;
+                for (const [key, value] of Object.entries(usersMap)) {
+                    if (value === namaTeks) { foundId = key; break; }
+                }
+                document.getElementById('editUserId').value = foundId;
+                document.getElementById('editTanggal').value = originalCard.querySelector('.text-\\[10px\\]').innerText;
+                document.getElementById('editKegiatan').value = originalCard.querySelector('.text-xs').innerText;
+
+            } catch (error) {
+                alert("Gagal memuat data lama untuk diedit.");
+                closeModalEdit();
+            }
+        }
+
+        function closeModalEdit() {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalCard.classList.add('scale-95');
+        }
+
+        document.getElementById('formEditLogbook').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editLogbookId').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerText = "Menyimpan...";
+            submitBtn.disabled = true;
+
+            const formData = {
+                user_id: parseInt(document.getElementById('editUserId').value),
+                tanggal: document.getElementById('editTanggal').value,
+                kegiatan: document.getElementById('editKegiatan').value,
+                foto: null
+            };
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/logbook/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert("Perubahan logbook berhasil disimpan!");
+                    closeModalEdit();
+                    loadData(); 
+                } else {
+                    alert("Gagal menyimpan perubahan.");
+                }
+            } catch (error) {
+                alert("Gagal menghubungi server untuk mengubah data.");
+            } finally {
+                submitBtn.innerText = "Simpan Perubahan";
+                submitBtn.disabled = false;
+            }
+        });
+
+        async function downloadCSV(tipe) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/${tipe}/`);
+                const data = await response.json();
+                
+                if(data.length === 0) {
+                    return alert("Gagal download: Data logbook masih kosong!");
+                }
+
+                const headers = ["No", "Tanggal", "Nama Anggota", "Kegiatan", "Link Bukti Foto"];
+                
+                const rows = data.map((item, index) => {
+                    const namaAsli = usersMap[item.user_id] || `User #${item.user_id}`;
+                    const kegiatanBersih = String(item.kegiatan).replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
+                    const linkFoto = item.foto ? item.foto : "Tidak ada foto";
+                    
+                    return [
+                        index + 1,
+                        item.tanggal,
+                        `"${namaAsli}"`,
+                        `"${kegiatanBersih}"`,
+                        `"${linkFoto}"`
+                    ].join(";"); 
+                });
+
+                const csvContent = "data:text/csv;charset=utf-8,\ufeff" + headers.join(";") + "\n" + rows.join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Rekap_LOGBOOK_KKN_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                
+            } catch (error) {
+                console.error(error);
+                alert("Waduh, gagal mengunduh CSV. Cek koneksi server ya.");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

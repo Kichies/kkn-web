@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Kerja KKN</title>
+    
+    <link rel="icon" type="image/png" href="assets/images/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/images/icon-192.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="js/tailwind-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+</head>
+<body class="bg-sagebg text-sagedark font-sans min-h-screen flex flex-col relative overflow-x-hidden p-4 md:p-6">
+
+    <nav class="w-full max-w-6xl mx-auto mb-8 flex justify-between items-center flex-wrap gap-4 z-10 pt-2">
+        <a href="index.html" class="text-sagedark font-bold bg-white/80 backdrop-blur-md px-5 py-2.5 rounded-full hover:bg-white transition-all shadow-sm border border-white/50 flex items-center gap-2">
+            &larr; Kembali
+        </a>
+        <div class="flex gap-3">
+            <button onclick="downloadCSV('proker')" class="bg-white/80 backdrop-blur-md text-sagedark font-bold px-5 py-2.5 rounded-full hover:bg-white transition-all shadow-sm border border-white/50">
+                📥 Download CSV
+            </button>
+            <!-- ID DITAMBAHKAN UNTUK KONTROL SATPAM VIRTUAL -->
+            <button id="btnTambahProker" onclick="bukaModal()" class="bg-sagedark/90 backdrop-blur-md text-white font-bold px-5 py-2.5 rounded-full hover:bg-black transition-all shadow-lg border border-sagedark">
+                + Tambah Proker
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow w-full max-w-6xl mx-auto z-10 flex flex-col">
+        
+        <div class="mb-8 text-center md:text-left text-white drop-shadow-md">
+            <h1 class="text-3xl md:text-4xl font-mono font-bold mb-2">Pantauan Proker</h1>
+            <p class="text-sm opacity-95 font-bold">Seret dan lepas (drag-and-drop) kartu untuk mengubah status.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
+            <!-- Kolom 1: To-Do -->
+            <div class="bg-white/40 backdrop-blur-lg rounded-[2rem] p-5 border border-white/60 flex flex-col h-full shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+                <div class="flex items-center justify-between mb-4 border-b border-white/40 pb-2">
+                    <h2 class="font-mono font-bold text-sagedark text-lg drop-shadow-sm">📌 To-Do</h2>
+                    <span id="count-todo" class="bg-white/80 text-sagedark text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
+                </div>
+                <div id="todo-list" class="flex flex-col gap-4 flex-grow min-h-[150px] pb-10"></div>
+            </div>
+
+            <!-- Kolom 2: In-Progress -->
+            <div class="bg-white/40 backdrop-blur-lg rounded-[2rem] p-5 border border-white/60 flex flex-col h-full shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+                <div class="flex items-center justify-between mb-4 border-b border-white/40 pb-2">
+                    <h2 class="font-mono font-bold text-sagedark text-lg drop-shadow-sm">🚀 In-Progress</h2>
+                    <span id="count-inprogress" class="bg-white/80 text-sagedark text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
+                </div>
+                <div id="inprogress-list" class="flex flex-col gap-4 flex-grow min-h-[150px] pb-10"></div>
+            </div>
+
+            <!-- Kolom 3: Done -->
+            <div class="bg-white/40 backdrop-blur-lg rounded-[2rem] p-5 border border-white/60 flex flex-col h-full shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+                <div class="flex items-center justify-between mb-4 border-b border-white/40 pb-2">
+                    <h2 class="font-mono font-bold text-sagedark text-lg drop-shadow-sm">✅ Done</h2>
+                    <span id="count-done" class="bg-white/80 text-sagedark text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">0</span>
+                </div>
+                <div id="done-list" class="flex flex-col gap-4 flex-grow min-h-[150px] pb-10"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL PROKER -->
+    <div id="modalProker" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+        <main class="w-full max-w-sm bg-white/90 backdrop-blur-xl border border-white p-8 rounded-[2.5rem] shadow-2xl relative transition-all duration-500 scale-95" id="modalCard">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-sagedark/10 rounded-2xl mb-3 border border-sagedark/5">
+                    <span class="text-2xl" id="modalIcon">📝</span>
+                </div>
+                <h1 class="text-xl font-mono font-bold text-sagedark tracking-tight" id="modalTitle">Tambah Proker</h1>
+            </div>
+
+            <form id="formProker" class="space-y-4">
+                <input type="hidden" id="prokerId">
+                <input type="hidden" id="prokerStatus" value="To-Do">
+                
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Judul Proker</label>
+                    <input type="text" id="judul" class="w-full bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold shadow-sm transition-all text-sm" required>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Deskripsi / Target</label>
+                    <textarea id="deskripsi" rows="3" class="w-full bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-medium shadow-sm transition-all resize-none text-sm" required></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Penanggung Jawab</label>
+                        <input type="text" id="pic" placeholder="Contoh: Hanif" class="w-full bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold shadow-sm transition-all text-sm" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Tenggat Waktu</label>
+                        <input type="date" id="tenggat" class="w-full bg-white border border-sagedark/10 p-3.5 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold shadow-sm transition-all text-[11px]" required>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-3">
+                    <button type="button" onclick="tutupModal()" class="w-1/2 bg-gray-100 text-gray-700 font-bold py-3 rounded-2xl hover:bg-gray-200 transition-all text-sm">Batal</button>
+                    <button type="submit" class="w-1/2 bg-sagedark text-white font-bold py-3 rounded-2xl hover:bg-black transition-all shadow-lg text-sm">Simpan</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        const apiBaseUrl = 'http://127.0.0.1:8000';
+
+        // ==========================================
+        // 🔒 KUNCI UTAMA: SATPAM VIRTUAL (RBAC)
+        // ==========================================
+        const isAdmin = localStorage.getItem('kkn_vip_access') === 'true';
+
+        // Jika bukan admin, sembunyikan tombol Tambah Proker
+        if (!isAdmin) {
+            document.getElementById('btnTambahProker').style.display = 'none';
+        }
+
+        // ==========================================
+        // 1. KONFIGURASI DRAG & DROP (SORTABLE.JS)
+        // ==========================================
+        const commonOptions = {
+            group: 'kanban', 
+            animation: 150,
+            ghostClass: 'opacity-40',
+            disabled: !isAdmin, // 🔒 SAKTI: Kunci fitur Drag & Drop jika pengunjung biasa!
+            onEnd: async function (evt) {
+                const itemEl = evt.item; 
+                const prokerId = itemEl.getAttribute('data-id');
+                const toListId = evt.to.id; 
+                
+                let newStatus = 'To-Do';
+                if (toListId === 'inprogress-list') newStatus = 'In-Progress';
+                else if (toListId === 'done-list') newStatus = 'Done';
+
+                updateCardVisuals(itemEl, newStatus);
+                updateCounters();
+
+                try {
+                    await fetch(`${apiBaseUrl}/proker/${prokerId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                } catch (error) {
+                    console.error("Gagal sinkron status dengan server.", error);
+                }
+            }
+        };
+
+        Sortable.create(document.getElementById('todo-list'), commonOptions);
+        Sortable.create(document.getElementById('inprogress-list'), commonOptions);
+        Sortable.create(document.getElementById('done-list'), commonOptions);
+
+        // ==========================================
+        // 2. FUNGSI MEMUAT DATA KANBAN
+        // ==========================================
+        async function loadProkerData() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/proker/`);
+                const data = await response.json();
+                
+                document.getElementById('todo-list').innerHTML = '';
+                document.getElementById('inprogress-list').innerHTML = '';
+                document.getElementById('done-list').innerHTML = '';
+
+                data.forEach(item => {
+                    let borderColor = 'border-gray-400';
+                    let statusLabel = `<span class="text-salmon font-bold">⏳ ${item.tenggat}</span>`;
+                    
+                    if (item.status === 'In-Progress') {
+                        borderColor = 'border-blue-500';
+                        statusLabel = `<span class="text-blue-500 font-bold">Berjalan 🏃</span>`;
+                    } else if (item.status === 'Done') {
+                        borderColor = 'border-green-500';
+                        statusLabel = `<span class="text-green-600 font-bold">Selesai ✅</span>`;
+                    }
+
+                    // 🔒 Munculkan ikon Edit & Hapus HANYA jika pengunjung adalah Admin
+                    const actionButtons = isAdmin ? `
+                        <div class="flex gap-1 bg-white/60 px-1.5 py-1 rounded-lg border border-sagedark/5 shadow-sm">
+                            <button onclick="bukaModalEdit(this.closest('.bg-white\\\\/80'))" class="hover:scale-110 transition text-[10px]" title="Edit">✏️</button>
+                            <button onclick="hapusProker(${item.id})" class="hover:scale-110 transition text-[10px]" title="Hapus">🗑️</button>
+                        </div>
+                    ` : '';
+
+                    const cardHTML = `
+                        <div class="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-sm border-l-4 ${borderColor} ${isAdmin ? 'cursor-grab' : 'cursor-default'} hover:shadow-md hover:bg-white transition" data-id="${item.id}" data-judul="${item.judul}" data-deskripsi="${item.deskripsi}" data-pic="${item.pic}" data-tenggat="${item.tenggat}" data-status="${item.status}">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-bold text-sm text-sagedark pr-2">${item.judul}</h3>
+                                ${actionButtons}
+                            </div>
+                            <p class="text-xs text-sagedark/70 mb-3 leading-relaxed font-medium line-clamp-2">${item.deskripsi}</p>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="bg-sagedark/5 text-sagedark px-2.5 py-1 rounded-lg font-semibold border border-sagedark/10">PIC: ${item.pic}</span>
+                                ${statusLabel}
+                            </div>
+                        </div>
+                    `;
+
+                    if (item.status === 'To-Do') document.getElementById('todo-list').insertAdjacentHTML('beforeend', cardHTML);
+                    else if (item.status === 'In-Progress') document.getElementById('inprogress-list').insertAdjacentHTML('beforeend', cardHTML);
+                    else document.getElementById('done-list').insertAdjacentHTML('beforeend', cardHTML);
+                });
+
+                updateCounters();
+            } catch (error) {
+                console.error("Gagal load proker.");
+            }
+        }
+
+        function updateCardVisuals(cardEl, status) {
+            cardEl.className = cardEl.className.replace(/border-gray-400|border-blue-500|border-green-500/g, '');
+            const infoContainer = cardEl.querySelector('.flex.justify-between.items-center span:nth-child(2)');
+            const tenggat = cardEl.getAttribute('data-tenggat');
+            
+            if (status === 'To-Do') {
+                cardEl.classList.add('border-gray-400');
+                infoContainer.outerHTML = `<span class="text-salmon font-bold">⏳ ${tenggat}</span>`;
+            } else if (status === 'In-Progress') {
+                cardEl.classList.add('border-blue-500');
+                infoContainer.outerHTML = `<span class="text-blue-500 font-bold">Berjalan 🏃</span>`;
+            } else {
+                cardEl.classList.add('border-green-500');
+                infoContainer.outerHTML = `<span class="text-green-600 font-bold">Selesai ✅</span>`;
+            }
+            cardEl.setAttribute('data-status', status);
+        }
+
+        function updateCounters() {
+            document.getElementById('count-todo').innerText = document.getElementById('todo-list').children.length;
+            document.getElementById('count-inprogress').innerText = document.getElementById('inprogress-list').children.length;
+            document.getElementById('count-done').innerText = document.getElementById('done-list').children.length;
+        }
+
+        // ==========================================
+        // 3. FUNGSI MODAL & FORM CRUD
+        // ==========================================
+        const modal = document.getElementById('modalProker');
+        const modalCard = document.getElementById('modalCard');
+
+        function bukaModal() {
+            document.getElementById('formProker').reset();
+            document.getElementById('prokerId').value = '';
+            document.getElementById('prokerStatus').value = 'To-Do';
+            document.getElementById('modalTitle').innerText = 'Tambah Proker';
+            document.getElementById('modalIcon').innerText = '📝';
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-95');
+        }
+
+        function bukaModalEdit(cardEl) {
+            document.getElementById('prokerId').value = cardEl.getAttribute('data-id');
+            document.getElementById('judul').value = cardEl.getAttribute('data-judul');
+            document.getElementById('deskripsi').value = cardEl.getAttribute('data-deskripsi');
+            document.getElementById('pic').value = cardEl.getAttribute('data-pic');
+            document.getElementById('tenggat').value = cardEl.getAttribute('data-tenggat');
+            document.getElementById('prokerStatus').value = cardEl.getAttribute('data-status');
+            
+            document.getElementById('modalTitle').innerText = 'Edit Proker';
+            document.getElementById('modalIcon').innerText = '✏️';
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalCard.classList.remove('scale-95');
+        }
+
+        function tutupModal() {
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalCard.classList.add('scale-95');
+        }
+
+        document.getElementById('formProker').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('prokerId').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.innerText = "Menyimpan...";
+            submitBtn.disabled = true;
+
+            const formData = {
+                judul: document.getElementById('judul').value,
+                deskripsi: document.getElementById('deskripsi').value,
+                pic: document.getElementById('pic').value,
+                tenggat: document.getElementById('tenggat').value,
+                status: document.getElementById('prokerStatus').value
+            };
+
+            const isUpdate = id !== '';
+            const url = isUpdate ? `${apiBaseUrl}/proker/${id}` : `${apiBaseUrl}/proker/`;
+            const method = isUpdate ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    tutupModal();
+                    loadProkerData(); 
+                } else {
+                    alert("Gagal menyimpan proker.");
+                }
+            } catch (error) {
+                alert("Gagal menghubungi server.");
+            } finally {
+                submitBtn.innerText = "Simpan";
+                submitBtn.disabled = false;
+            }
+        });
+
+        async function hapusProker(id) {
+            if (confirm("Yakin ingin menghapus proker ini dari papan?")) {
+                try {
+                    await fetch(`${apiBaseUrl}/proker/${id}`, { method: 'DELETE' });
+                    loadProkerData(); 
+                } catch (error) {
+                    alert("Gagal menghapus proker.");
+                }
+            }
+        }
+
+        async function downloadCSV(tipe) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/${tipe}/`);
+                const data = await response.json();
+                if(data.length === 0) return alert("Data proker masih kosong!");
+
+                const headers = ["No", "Judul Program", "PIC", "Tenggat Waktu", "Status Saat Ini", "Deskripsi Target"];
+                const rows = data.map((item, index) => {
+                    const descBersih = String(item.deskripsi || "").replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""');
+                    return [
+                        index + 1,
+                        `"${item.judul}"`,
+                        `"${item.pic}"`,
+                        item.tenggat,
+                        item.status,
+                        `"${descBersih}"`
+                    ].join(";"); 
+                });
+
+                const csvContent = "data:text/csv;charset=utf-8,\ufeff" + headers.join(";") + "\n" + rows.join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Rekap_PROKER_KKN_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                
+            } catch (error) {
+                alert("Gagal mengunduh CSV.");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadProkerData);
+    </script>
+</body>
+</html>

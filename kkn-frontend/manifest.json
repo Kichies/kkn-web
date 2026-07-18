@@ -1,0 +1,21 @@
+{
+  "name": "KKN Sisdamas 118",
+  "short_name": "KKN 118",
+  "description": "Sistem Manajemen Logbook, Kas, dan Proker Posko KKN 118",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#E8EDE7",
+  "theme_color": "#2C3D30",
+  "icons": [
+    {
+      "src": "assets/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
