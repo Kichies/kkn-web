@@ -1,5 +1,4 @@
 {
-  "outputDirectory": "kkn-frontend",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/kkn-backend/app/main.py" },
     { "source": "/(.*)", "destination": "/kkn-frontend/$1" }
