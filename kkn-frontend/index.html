@@ -107,7 +107,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         // KUNCI PWA 2: Mendaftarkan Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -123,9 +123,16 @@
         const btnAuth = document.getElementById('btnAuth');
 
         // Cek apakah sudah login sebelumnya
-        if (localStorage.getItem('kkn_vip_access') === 'true') {
-            btnAuth.innerHTML = '<span>Mode Admin Aktif</span><span>🔓</span>';
+        const sudahAksesUmum = localStorage.getItem('kkn_akses_umum') === 'true';
+        const sudahAksesKeuangan = localStorage.getItem('kkn_akses_keuangan') === 'true';
+
+        if (sudahAksesKeuangan) {
+            btnAuth.innerHTML = '<span>Mode BPH Aktif</span><span>🔓</span>';
             btnAuth.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
+            btnAuth.onclick = prosesLogout;
+        } else if (sudahAksesUmum) {
+            btnAuth.innerHTML = '<span>Mode Anggota Aktif</span><span>🔓</span>';
+            btnAuth.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300');
             btnAuth.onclick = prosesLogout;
         }
 
@@ -142,9 +149,16 @@
 
         function prosesLogin() {
             const pass = document.getElementById('passwordInput').value;
-            if (pass === '190726OK') {
-                localStorage.setItem('kkn_vip_access', 'true');
-                alert("Berhasil masuk! Mode Admin diaktifkan.");
+
+            if (pass === '190726BPH') {
+                localStorage.setItem('kkn_akses_umum', 'true');
+                localStorage.setItem('kkn_akses_keuangan', 'true');
+                alert("Berhasil masuk! Mode BPH (akses penuh) diaktifkan.");
+                window.location.reload();
+            } else if (pass === '190726OK') {
+                localStorage.setItem('kkn_akses_umum', 'true');
+                localStorage.removeItem('kkn_akses_keuangan');
+                alert("Berhasil masuk! Mode Anggota diaktifkan.");
                 window.location.reload();
             } else {
                 alert("Sandi salah, Bos!");
@@ -152,8 +166,9 @@
         }
 
         function prosesLogout() {
-            if(confirm("Keluar dari Mode Admin?")) {
-                localStorage.removeItem('kkn_vip_access');
+            if(confirm("Keluar dari mode akses?")) {
+                localStorage.removeItem('kkn_akses_umum');
+                localStorage.removeItem('kkn_akses_keuangan');
                 window.location.reload();
             }
         }

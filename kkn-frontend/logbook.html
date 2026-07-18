@@ -164,7 +164,7 @@
         const apiBaseUrl = 'https://kkn-web-omega.vercel.app/api';
 
         // 🔒 SATPAM VIRTUAL: Cek Hak Akses
-        const isAdmin = localStorage.getItem('kkn_vip_access') === 'true';
+        const isAdmin = localStorage.getItem('kkn_akses_umum') === 'true';
 
         // Jika bukan admin, sembunyikan form input dan perlebar list riwayat
         if (!isAdmin) {

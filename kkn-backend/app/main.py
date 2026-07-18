@@ -2,7 +2,6 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
@@ -10,6 +9,7 @@ import os
 import base64
 import uuid
 import json
+from supabase import create_client, Client
 
 from app import models
 from app import schemas
@@ -19,10 +19,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Manajemen KKN")
 
-# --- KONFIGURASI FOLDER UPLOADS & CORS ---
-os.makedirs("app/uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")
-
+# --- KONFIGURASI CORS ---
 origins = [
     "http://127.0.0.1:5500",
     "http://localhost:5500",
@@ -38,24 +35,43 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- FUNGSI SULAP BASE64 KE FILE GAMBAR (VERSI FIX) ---
+# --- KONFIGURASI SUPABASE STORAGE ---
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_BUCKET = "uploads"
+
+supabase: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+else:
+    print("PERINGATAN: SUPABASE_URL / SUPABASE_KEY belum di-set. Upload foto akan gagal.")
+
+# --- FUNGSI UPLOAD BASE64 KE SUPABASE STORAGE ---
 def process_base64_image(base64_str: str, request=None) -> str:
-    """Ubah teks Base64 jadi gambar JPG/PNG dan kembalikan URL yang dinamis"""
+    """Ubah teks Base64 jadi file gambar, upload ke Supabase Storage, kembalikan URL publiknya"""
     if not base64_str or not base64_str.startswith("data:image"):
-        return base64_str 
+        return base64_str
+
+    if not supabase:
+        print("Gagal upload: Supabase client belum terkonfigurasi.")
+        return None
+
     try:
         header, encoded = base64_str.split(",", 1)
         ext = header.split(";")[0].split("/")[1]
         filename = f"{uuid.uuid4().hex}.{ext}"
-        filepath = os.path.join("app/uploads", filename)
-        
-        with open(filepath, "wb") as f:
-            f.write(base64.b64decode(encoded))
-            
-        base_url = "https://kkn-web-omega.vercel.app"
-        return f"{base_url}/uploads/{filename}"
+        file_bytes = base64.b64decode(encoded)
+
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            path=filename,
+            file=file_bytes,
+            file_options={"content-type": f"image/{ext}"}
+        )
+
+        public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(filename)
+        return public_url
     except Exception as e:
-        print(f"Gagal memproses gambar: {e}")
+        print(f"Gagal memproses/upload gambar: {e}")
         return None
 
 # ==========================================

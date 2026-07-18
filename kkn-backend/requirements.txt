@@ -7,3 +7,4 @@ python-multipart
 gspread
 oauth2client
 pydantic
+supabase
