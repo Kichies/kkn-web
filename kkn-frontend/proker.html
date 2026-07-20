@@ -24,7 +24,6 @@
             <button onclick="downloadCSV('proker')" class="bg-white/80 backdrop-blur-md text-sagedark font-bold px-5 py-2.5 rounded-full hover:bg-white transition-all shadow-sm border border-white/50">
                 📥 Download CSV
             </button>
-            <!-- ID DITAMBAHKAN UNTUK KONTROL SATPAM VIRTUAL -->
             <button id="btnTambahProker" onclick="bukaModal()" class="bg-sagedark/90 backdrop-blur-md text-white font-bold px-5 py-2.5 rounded-full hover:bg-black transition-all shadow-lg border border-sagedark">
                 + Tambah Proker
             </button>
@@ -39,7 +38,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-            <!-- Kolom 1: To-Do -->
             <div class="bg-white/40 backdrop-blur-lg rounded-[2rem] p-5 border border-white/60 flex flex-col h-full shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
                 <div class="flex items-center justify-between mb-4 border-b border-white/40 pb-2">
                     <h2 class="font-mono font-bold text-sagedark text-lg drop-shadow-sm">📌 To-Do</h2>
@@ -48,7 +46,6 @@
                 <div id="todo-list" class="flex flex-col gap-4 flex-grow min-h-[150px] pb-10"></div>
             </div>
 
-            <!-- Kolom 2: In-Progress -->
             <div class="bg-white/40 backdrop-blur-lg rounded-[2rem] p-5 border border-white/60 flex flex-col h-full shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
                 <div class="flex items-center justify-between mb-4 border-b border-white/40 pb-2">
                     <h2 class="font-mono font-bold text-sagedark text-lg drop-shadow-sm">🚀 In-Progress</h2>
@@ -57,7 +54,6 @@
                 <div id="inprogress-list" class="flex flex-col gap-4 flex-grow min-h-[150px] pb-10"></div>
             </div>
 
-            <!-- Kolom 3: Done -->
             <div class="bg-white/40 backdrop-blur-lg rounded-[2rem] p-5 border border-white/60 flex flex-col h-full shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
                 <div class="flex items-center justify-between mb-4 border-b border-white/40 pb-2">
                     <h2 class="font-mono font-bold text-sagedark text-lg drop-shadow-sm">✅ Done</h2>
@@ -68,7 +64,6 @@
         </div>
     </main>
 
-    <!-- MODAL PROKER -->
     <div id="modalProker" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
         <main class="w-full max-w-sm bg-white/90 backdrop-blur-xl border border-white p-8 rounded-[2.5rem] shadow-2xl relative transition-all duration-500 scale-95" id="modalCard">
             <div class="text-center mb-6">
@@ -114,24 +109,19 @@
     <script>
         const apiBaseUrl = 'https://kkn-web-omega.vercel.app/api';
 
-        // ==========================================
-        // 🔒 KUNCI UTAMA: SATPAM VIRTUAL (RBAC)
-        // ==========================================
-        const isAdmin = localStorage.getItem('kkn_akses_umum') === 'true';
+        // 🔒 SATPAM VIRTUAL
+        const kkn_akses_key = localStorage.getItem('kkn_akses_key');
+        const isAdmin = (kkn_akses_key === '190726OK' || kkn_akses_key === '190726BPH');
 
-        // Jika bukan admin, sembunyikan tombol Tambah Proker
         if (!isAdmin) {
             document.getElementById('btnTambahProker').style.display = 'none';
         }
 
-        // ==========================================
-        // 1. KONFIGURASI DRAG & DROP (SORTABLE.JS)
-        // ==========================================
         const commonOptions = {
             group: 'kanban', 
             animation: 150,
             ghostClass: 'opacity-40',
-            disabled: !isAdmin, // 🔒 SAKTI: Kunci fitur Drag & Drop jika pengunjung biasa!
+            disabled: !isAdmin,
             onEnd: async function (evt) {
                 const itemEl = evt.item; 
                 const prokerId = itemEl.getAttribute('data-id');
@@ -147,7 +137,7 @@
                 try {
                     await fetch(`${apiBaseUrl}/proker/${prokerId}/status`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', 'X-Akses-Key': kkn_akses_key },
                         body: JSON.stringify({ status: newStatus })
                     });
                 } catch (error) {
@@ -160,9 +150,6 @@
         Sortable.create(document.getElementById('inprogress-list'), commonOptions);
         Sortable.create(document.getElementById('done-list'), commonOptions);
 
-        // ==========================================
-        // 2. FUNGSI MEMUAT DATA KANBAN
-        // ==========================================
         async function loadProkerData() {
             try {
                 const response = await fetch(`${apiBaseUrl}/proker/`);
@@ -184,7 +171,6 @@
                         statusLabel = `<span class="text-green-600 font-bold">Selesai ✅</span>`;
                     }
 
-                    // 🔒 Munculkan ikon Edit & Hapus HANYA jika pengunjung adalah Admin
                     const actionButtons = isAdmin ? `
                         <div class="flex gap-1 bg-white/60 px-1.5 py-1 rounded-lg border border-sagedark/5 shadow-sm">
                             <button onclick="bukaModalEdit(this.closest('.bg-white\\\\/80'))" class="hover:scale-110 transition text-[10px]" title="Edit">✏️</button>
@@ -241,9 +227,6 @@
             document.getElementById('count-done').innerText = document.getElementById('done-list').children.length;
         }
 
-        // ==========================================
-        // 3. FUNGSI MODAL & FORM CRUD
-        // ==========================================
         const modal = document.getElementById('modalProker');
         const modalCard = document.getElementById('modalCard');
 
@@ -300,7 +283,7 @@
             try {
                 const response = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Akses-Key': kkn_akses_key },
                     body: JSON.stringify(formData)
                 });
 
@@ -321,7 +304,10 @@
         async function hapusProker(id) {
             if (confirm("Yakin ingin menghapus proker ini dari papan?")) {
                 try {
-                    await fetch(`${apiBaseUrl}/proker/${id}`, { method: 'DELETE' });
+                    await fetch(`${apiBaseUrl}/proker/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-Akses-Key': kkn_akses_key }
+                    });
                     loadProkerData(); 
                 } catch (error) {
                     alert("Gagal menghapus proker.");

@@ -31,7 +31,6 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-8 flex-grow">
-            <!-- KOLOM KIRI: Form Logbook (Diberi ID untuk Satpam Virtual) -->
             <div id="formKolom" class="bg-white/40 backdrop-blur-lg border border-white/60 p-8 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] w-full md:w-1/2 h-fit transition-all duration-500">
                 <div class="mb-6">
                     <h2 class="text-xl font-mono font-bold mb-1 text-sagedark">Tulis Laporan</h2>
@@ -86,7 +85,6 @@
                 </form>
             </div>
 
-            <!-- KOLOM KANAN: Riwayat Laporan (Diberi ID untuk Satpam Virtual) -->
             <div id="listKolom" class="w-full md:w-1/2 flex flex-col transition-all duration-500">
                 <div class="bg-white/40 backdrop-blur-lg border border-white/60 p-6 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] flex-grow max-h-[660px] flex flex-col">
                     <div class="flex justify-between items-center mb-4 border-b border-sagedark/20 pb-2">
@@ -102,7 +100,6 @@
         </div>
     </main>
 
-    <!-- HTML MODAL EDIT -->
     <div id="modalEditLogbook" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
         <main class="w-full max-w-sm bg-white/90 backdrop-blur-xl border border-white p-8 rounded-[2.5rem] shadow-2xl relative transition-all duration-500 scale-95" id="modalCard">
             
@@ -163,10 +160,10 @@
         document.getElementById('tanggal').valueAsDate = new Date();
         const apiBaseUrl = 'https://kkn-web-omega.vercel.app/api';
 
-        // 🔒 SATPAM VIRTUAL: Cek Hak Akses
-        const isAdmin = localStorage.getItem('kkn_akses_umum') === 'true';
+        // 🔒 SATPAM VIRTUAL
+        const kkn_akses_key = localStorage.getItem('kkn_akses_key');
+        const isAdmin = (kkn_akses_key === '190726OK' || kkn_akses_key === '190726BPH');
 
-        // Jika bukan admin, sembunyikan form input dan perlebar list riwayat
         if (!isAdmin) {
             document.getElementById('formKolom').style.display = 'none';
             document.getElementById('listKolom').classList.remove('md:w-1/2');
@@ -181,12 +178,39 @@
             13: "Azel (Konsumsi)", 14: "Apriyani (Konsumsi)" 
         };
 
+        // Poin 4: kompresi foto sebelum jadi base64 (resize max 1000px, kualitas 70%)
         function convertFileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
+                reader.onload = () => {
+                    const img = new Image();
+                    img.src = reader.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 1000;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height && width > MAX_SIZE) {
+                            height = Math.round((height * MAX_SIZE) / width);
+                            width = MAX_SIZE;
+                        } else if (height > MAX_SIZE) {
+                            width = Math.round((width * MAX_SIZE) / height);
+                            height = MAX_SIZE;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(compressedBase64);
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
             });
         }
 
@@ -211,7 +235,6 @@
                     const namaUser = usersMap[item.user_id] || `User #${item.user_id}`;
                     const imgTag = item.foto ? `<img src="${item.foto}" alt="Bukti" class="w-full h-40 object-cover rounded-xl mt-3 border border-white/50 shadow-inner">` : '';
 
-                    // 🔒 Sembunyikan tombol Edit/Delete jika bukan admin
                     const actionButtons = isAdmin ? `
                         <div class="flex gap-2 bg-white/50 px-2 py-1.5 rounded-lg border border-sagedark/10 shadow-sm">
                             <button onclick="editData(${item.id})" class="hover:scale-110 transition text-xs" title="Edit">✏️</button>
@@ -259,7 +282,7 @@
             try {
                 const response = await fetch(`${apiBaseUrl}/logbook/`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Akses-Key': kkn_akses_key },
                     body: JSON.stringify(formData)
                 });
 
@@ -269,7 +292,8 @@
                     document.getElementById('tanggal').valueAsDate = new Date(); 
                     loadData(); 
                 } else {
-                    alert("Gagal menyimpan data.");
+                    const errData = await response.json();
+                    alert("Gagal menyimpan data: " + (errData.detail || "Terjadi kesalahan."));
                 }
             } catch (error) {
                 alert("Gagal menghubungi server.");
@@ -282,7 +306,10 @@
         async function hapusData(id) {
             if (confirm(`Yakin ingin menghapus laporan logbook ID ${id}? Tindakan ini permanen.`)) {
                 try {
-                    const response = await fetch(`${apiBaseUrl}/logbook/${id}`, { method: 'DELETE' });
+                    const response = await fetch(`${apiBaseUrl}/logbook/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-Akses-Key': kkn_akses_key }
+                    });
                     if (response.ok) {
                         alert("Laporan berhasil dihapus.");
                         loadData(); 
@@ -344,7 +371,7 @@
             try {
                 const response = await fetch(`${apiBaseUrl}/logbook/${id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Akses-Key': kkn_akses_key },
                     body: JSON.stringify(formData)
                 });
 

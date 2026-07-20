@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,6 +34,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ==========================================
+# KONFIGURASI AKSES (Poin 6: Proteksi Backend)
+# ==========================================
+# Bisa dioverride lewat Environment Variables di Vercel kalau mau ganti tanpa ubah kode.
+KUNCI_UMUM = os.getenv("ADMIN_KEY_UMUM", "190726OK")
+KUNCI_BPH = os.getenv("ADMIN_KEY_BPH", "190726BPH")
+
+def verifikasi_akses_umum(x_akses_key: str = Header(None)):
+    """Dipakai untuk endpoint yang boleh diubah anggota biasa (logbook, proker)."""
+    if x_akses_key not in (KUNCI_UMUM, KUNCI_BPH):
+        raise HTTPException(status_code=403, detail="Akses ditolak. Silakan login sebagai pengurus dulu.")
+    return x_akses_key
+
+def verifikasi_akses_keuangan(x_akses_key: str = Header(None)):
+    """Dipakai khusus endpoint keuangan (cashflow), hanya BPH yang boleh."""
+    if x_akses_key != KUNCI_BPH:
+        raise HTTPException(status_code=403, detail="Akses ditolak. Hanya BPH yang bisa mengelola keuangan.")
+    return x_akses_key
 
 # --- KONFIGURASI SUPABASE STORAGE ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -109,13 +128,13 @@ def read_root():
 
 # ==========================================
 # ENDPOINT: ABSENSI (Scan QR Pagi & Malam)
+# Catatan: sengaja TIDAK diproteksi, karena ini form publik buat semua anggota absen.
 # ==========================================
 
-# --- KONFIGURASI JAM ABSEN (ubah di sini kalau jadwal berubah) ---
-ABSEN_PAGI_MULAI = 6    # 06:00
-ABSEN_PAGI_SELESAI = 9  # sampai sebelum 09:00
-ABSEN_MALAM_MULAI = 19  # 19:00
-ABSEN_MALAM_SELESAI = 22 # sampai sebelum 22:00
+ABSEN_PAGI_MULAI = 6
+ABSEN_PAGI_SELESAI = 9
+ABSEN_MALAM_MULAI = 19
+ABSEN_MALAM_SELESAI = 22
 
 @app.post("/api/absensi/", response_model=schemas.AbsensiResponse, tags=["Absensi"])
 def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)):
@@ -160,10 +179,10 @@ def read_absensi(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     return db.query(models.Absensi).order_by(models.Absensi.id.desc()).offset(skip).limit(limit).all()
 
 # ==========================================
-# ENDPOINT: LOGBOOK (Laporan Malam Hari + Foto)
+# ENDPOINT: LOGBOOK (Diproteksi: akses umum)
 # ==========================================
 @app.post("/api/logbook/", response_model=schemas.LogbookResponse, tags=["Logbook"])
-def create_logbook(logbook: schemas.LogbookCreate, db: Session = Depends(get_db)):
+def create_logbook(logbook: schemas.LogbookCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     foto_url = process_base64_image(logbook.foto)
     db_logbook = models.Logbook(
         user_id=logbook.user_id,
@@ -181,7 +200,7 @@ def read_logbooks(skip: int = 0, limit: int = 50, db: Session = Depends(get_db))
     return db.query(models.Logbook).order_by(models.Logbook.id.desc()).offset(skip).limit(limit).all()
 
 @app.delete("/api/logbook/{id}", tags=["Logbook"])
-def delete_logbook(id: int, db: Session = Depends(get_db)):
+def delete_logbook(id: int, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     item = db.query(models.Logbook).filter(models.Logbook.id == id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Data logbook tidak ditemukan")
@@ -190,7 +209,7 @@ def delete_logbook(id: int, db: Session = Depends(get_db)):
     return {"message": f"Logbook ID {id} berhasil dihapus"}
 
 @app.put("/api/logbook/{id}", response_model=schemas.LogbookResponse, tags=["Logbook"])
-def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depends(get_db)):
+def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     item = db.query(models.Logbook).filter(models.Logbook.id == id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Data logbook tidak ditemukan")
@@ -206,10 +225,13 @@ def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depend
     return item
 
 # ==========================================
-# ENDPOINT: CASHFLOW (Manajemen Keuangan)
+# ENDPOINT: CASHFLOW (Diproteksi: khusus BPH)
 # ==========================================
 @app.post("/api/cashflow/", response_model=schemas.CashflowResponse, tags=["Cashflow"])
-def create_cashflow(cashflow: schemas.CashflowCreate, db: Session = Depends(get_db)):
+def create_cashflow(cashflow: schemas.CashflowCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_keuangan)):
+    if cashflow.nominal <= 0:
+        raise HTTPException(status_code=400, detail="Nominal harus lebih dari 0.")
+
     struk_url = process_base64_image(cashflow.struk)
     db_cashflow = models.Cashflow(
         tipe=cashflow.tipe,
@@ -229,7 +251,7 @@ def read_cashflows(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
     return db.query(models.Cashflow).order_by(models.Cashflow.id.desc()).offset(skip).limit(limit).all()
 
 @app.delete("/api/cashflow/{id}", tags=["Cashflow"])
-def delete_cashflow(id: int, db: Session = Depends(get_db)):
+def delete_cashflow(id: int, db: Session = Depends(get_db), _=Depends(verifikasi_akses_keuangan)):
     item = db.query(models.Cashflow).filter(models.Cashflow.id == id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Data kas tidak ditemukan")
@@ -238,7 +260,10 @@ def delete_cashflow(id: int, db: Session = Depends(get_db)):
     return {"message": f"Transaksi ID {id} berhasil dihapus"}
 
 @app.put("/api/cashflow/{id}", response_model=schemas.CashflowResponse, tags=["Cashflow"])
-def update_cashflow(id: int, cashflow: schemas.CashflowCreate, db: Session = Depends(get_db)):
+def update_cashflow(id: int, cashflow: schemas.CashflowCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_keuangan)):
+    if cashflow.nominal <= 0:
+        raise HTTPException(status_code=400, detail="Nominal harus lebih dari 0.")
+
     item = db.query(models.Cashflow).filter(models.Cashflow.id == id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Data kas tidak ditemukan")
@@ -256,10 +281,10 @@ def update_cashflow(id: int, cashflow: schemas.CashflowCreate, db: Session = Dep
     return item
 
 # ==========================================
-# ENDPOINT: PROGRAM KERJA (KANBAN BOARD)
+# ENDPOINT: PROGRAM KERJA (Diproteksi: akses umum)
 # ==========================================
 @app.post("/api/proker/", response_model=schemas.ProkerResponse, tags=["Proker"])
-def create_proker(proker: schemas.ProkerCreate, db: Session = Depends(get_db)):
+def create_proker(proker: schemas.ProkerCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     db_proker = models.Proker(**proker.dict())
     db.add(db_proker)
     db.commit()
@@ -271,7 +296,7 @@ def read_prokers(db: Session = Depends(get_db)):
     return db.query(models.Proker).order_by(models.Proker.id.desc()).all()
 
 @app.put("/api/proker/{id}", response_model=schemas.ProkerResponse, tags=["Proker"])
-def update_proker(id: int, proker: schemas.ProkerCreate, db: Session = Depends(get_db)):
+def update_proker(id: int, proker: schemas.ProkerCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     item = db.query(models.Proker).filter(models.Proker.id == id).first()
     if not item: raise HTTPException(status_code=404)
     for key, value in proker.dict().items():
@@ -280,9 +305,8 @@ def update_proker(id: int, proker: schemas.ProkerCreate, db: Session = Depends(g
     db.refresh(item)
     return item
 
-# Endpoint khusus kilat untuk Drag-and-Drop
 @app.patch("/api/proker/{id}/status", tags=["Proker"])
-def update_proker_status(id: int, status_update: schemas.ProkerStatusUpdate, db: Session = Depends(get_db)):
+def update_proker_status(id: int, status_update: schemas.ProkerStatusUpdate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     item = db.query(models.Proker).filter(models.Proker.id == id).first()
     if not item: raise HTTPException(status_code=404)
     item.status = status_update.status
@@ -290,7 +314,7 @@ def update_proker_status(id: int, status_update: schemas.ProkerStatusUpdate, db:
     return {"message": "Status updated"}
 
 @app.delete("/api/proker/{id}", tags=["Proker"])
-def delete_proker(id: int, db: Session = Depends(get_db)):
+def delete_proker(id: int, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
     item = db.query(models.Proker).filter(models.Proker.id == id).first()
     if not item: raise HTTPException(status_code=404)
     db.delete(item)

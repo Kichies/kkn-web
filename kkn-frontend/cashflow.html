@@ -32,7 +32,6 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-8 flex-grow">
-            <!-- KOLOM KIRI: Form Transaksi (Diberi ID untuk Satpam Virtual) -->
             <div id="formKolom" class="bg-white/40 backdrop-blur-lg border border-white/60 p-8 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] w-full md:w-1/2 h-fit transition-all duration-500">
                 <div class="mb-6">
                     <h2 class="text-xl font-mono font-bold mb-1 text-sagedark">Catat Transaksi</h2>
@@ -56,7 +55,7 @@
 
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-wider text-sagedark/80 mb-2 pl-2">Nominal (Rp)</label>
-                        <input type="number" id="nominal" placeholder="Contoh: 50000" class="w-full bg-white/60 backdrop-blur-sm border border-white/50 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/80 text-sagedark font-semibold shadow-sm transition-all" required>
+                        <input type="number" id="nominal" min="1" placeholder="Contoh: 50000" class="w-full bg-white/60 backdrop-blur-sm border border-white/50 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/80 text-sagedark font-semibold shadow-sm transition-all" required>
                     </div>
 
                     <div>
@@ -80,7 +79,6 @@
                 </form>
             </div>
 
-            <!-- KOLOM KANAN: Total & Riwayat (Diberi ID untuk Satpam Virtual) -->
             <div id="listKolom" class="w-full md:w-1/2 flex flex-col gap-6 transition-all duration-500">
                 <div class="bg-sagedark/90 backdrop-blur-md text-white p-6 rounded-[2rem] shadow-xl flex flex-col justify-center items-center h-36 border border-sagedark relative overflow-hidden">
                     <span class="font-mono text-xs uppercase tracking-widest opacity-80 mb-1">Total Saldo Kas Posko</span>
@@ -98,7 +96,6 @@
         </div>
     </main>
 
-    <!-- HTML MODAL EDIT CASHFLOW -->
     <div id="modalEditCashflow" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
         <main class="w-full max-w-sm bg-white/90 backdrop-blur-xl border border-white p-8 rounded-[2.5rem] shadow-2xl relative transition-all duration-500 scale-95" id="modalCardCash">
             
@@ -128,7 +125,7 @@
 
                 <div class="space-y-1">
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-sagedark/70 pl-2">Nominal (Rp)</label>
-                    <input type="number" id="editNominal" class="w-full bg-white border border-sagedark/10 p-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold shadow-sm transition-all text-sm" required>
+                    <input type="number" id="editNominal" min="1" class="w-full bg-white border border-sagedark/10 p-3 rounded-xl focus:outline-none focus:ring-1 focus:ring-sagedark/50 text-sagedark font-semibold shadow-sm transition-all text-sm" required>
                 </div>
 
                 <div class="space-y-1">
@@ -152,23 +149,49 @@
     <script>
         const apiBaseUrl = 'https://kkn-web-omega.vercel.app/api';
 
-        // 🔒 SATPAM VIRTUAL: Cek Hak Akses
-        const isAdmin = localStorage.getItem('kkn_akses_keuangan') === 'true';
+        // 🔒 SATPAM VIRTUAL — khusus keuangan, hanya kunci BPH yang lolos
+        const kkn_akses_key = localStorage.getItem('kkn_akses_key');
+        const isAdmin = (kkn_akses_key === '190726BPH');
 
-        // Jika bukan admin, sembunyikan form input dan perlebar list riwayat
         if (!isAdmin) {
             document.getElementById('formKolom').style.display = 'none';
             document.getElementById('listKolom').classList.remove('md:w-1/2');
             document.getElementById('listKolom').classList.add('w-full');
         }
 
-        // Fungsi Helper Konversi File
+        // Poin 4: kompresi foto struk sebelum jadi base64
         function convertFileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
+                reader.onload = () => {
+                    const img = new Image();
+                    img.src = reader.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 1000;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height && width > MAX_SIZE) {
+                            height = Math.round((height * MAX_SIZE) / width);
+                            width = MAX_SIZE;
+                        } else if (height > MAX_SIZE) {
+                            width = Math.round((width * MAX_SIZE) / height);
+                            height = MAX_SIZE;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(compressedBase64);
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
             });
         }
 
@@ -213,7 +236,6 @@
                     const tanda = isPemasukan ? '+' : '-';
                     const strukTag = item.struk ? `<a href="${item.struk}" target="_blank" class="text-[10px] bg-sagedark/10 px-2 py-0.5 rounded-full mt-1 inline-block hover:bg-sagedark/20">Lihat Struk</a>` : '';
 
-                    // 🔒 Sembunyikan tombol Edit/Delete jika bukan admin
                     const actionButtons = isAdmin ? `
                         <div class="flex gap-2 border-l border-sagedark/10 pl-2">
                             <button onclick="editData(${item.id})" class="hover:scale-110 transition text-xs" title="Edit">✏️</button>
@@ -268,7 +290,7 @@
             try {
                 const response = await fetch(`${apiBaseUrl}/cashflow/`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Akses-Key': kkn_akses_key },
                     body: JSON.stringify(formData)
                 });
 
@@ -277,7 +299,8 @@
                     e.target.reset();
                     loadCashflowData();
                 } else {
-                    alert("Gagal mencatat transaksi.");
+                    const errData = await response.json();
+                    alert("Gagal mencatat transaksi: " + (errData.detail || "Terjadi kesalahan."));
                 }
             } catch (error) {
                 alert("Gagal menghubungi server backend.");
@@ -290,7 +313,10 @@
         async function hapusData(id) {
             if (confirm(`Yakin ingin menghapus transaksi kas ID ${id}? Tindakan ini permanen.`)) {
                 try {
-                    const response = await fetch(`${apiBaseUrl}/cashflow/${id}`, { method: 'DELETE' });
+                    const response = await fetch(`${apiBaseUrl}/cashflow/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'X-Akses-Key': kkn_akses_key }
+                    });
                     if (response.ok) {
                         alert("Transaksi berhasil dihapus.");
                         loadCashflowData(); 
@@ -358,7 +384,7 @@
             try {
                 const response = await fetch(`${apiBaseUrl}/cashflow/${id}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Akses-Key': kkn_akses_key },
                     body: JSON.stringify(formData)
                 });
 
@@ -367,7 +393,8 @@
                     closeModalEditCash();
                     loadCashflowData(); 
                 } else {
-                    alert("Gagal menyimpan perubahan.");
+                    const errData = await response.json();
+                    alert("Gagal menyimpan perubahan: " + (errData.detail || "Terjadi kesalahan."));
                 }
             } catch (error) {
                 alert("Gagal menghubungi server untuk mengubah data.");

@@ -108,7 +108,6 @@
     </div>
 
 <script>
-        // KUNCI PWA 2: Mendaftarkan Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
@@ -117,20 +116,17 @@
             });
         }
 
-        // LOGIKA KARCIS VIP (LOGIN)
         const modal = document.getElementById('modalLogin');
         const modalCard = document.getElementById('modalCardLogin');
         const btnAuth = document.getElementById('btnAuth');
 
-        // Cek apakah sudah login sebelumnya
-        const sudahAksesUmum = localStorage.getItem('kkn_akses_umum') === 'true';
-        const sudahAksesKeuangan = localStorage.getItem('kkn_akses_keuangan') === 'true';
+        const kunciTersimpan = localStorage.getItem('kkn_akses_key');
 
-        if (sudahAksesKeuangan) {
+        if (kunciTersimpan === '190726BPH') {
             btnAuth.innerHTML = '<span>Mode BPH Aktif</span><span>🔓</span>';
             btnAuth.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
             btnAuth.onclick = prosesLogout;
-        } else if (sudahAksesUmum) {
+        } else if (kunciTersimpan === '190726OK') {
             btnAuth.innerHTML = '<span>Mode Anggota Aktif</span><span>🔓</span>';
             btnAuth.classList.add('bg-blue-100', 'text-blue-800', 'border-blue-300');
             btnAuth.onclick = prosesLogout;
@@ -150,15 +146,9 @@
         function prosesLogin() {
             const pass = document.getElementById('passwordInput').value;
 
-            if (pass === '190726BPH') {
-                localStorage.setItem('kkn_akses_umum', 'true');
-                localStorage.setItem('kkn_akses_keuangan', 'true');
-                alert("Berhasil masuk! Mode BPH (akses penuh) diaktifkan.");
-                window.location.reload();
-            } else if (pass === '190726OK') {
-                localStorage.setItem('kkn_akses_umum', 'true');
-                localStorage.removeItem('kkn_akses_keuangan');
-                alert("Berhasil masuk! Mode Anggota diaktifkan.");
+            if (pass === '190726BPH' || pass === '190726OK') {
+                localStorage.setItem('kkn_akses_key', pass);
+                alert(pass === '190726BPH' ? "Berhasil masuk! Mode BPH (akses penuh) diaktifkan." : "Berhasil masuk! Mode Anggota diaktifkan.");
                 window.location.reload();
             } else {
                 alert("Sandi salah, Bos!");
@@ -167,8 +157,7 @@
 
         function prosesLogout() {
             if(confirm("Keluar dari mode akses?")) {
-                localStorage.removeItem('kkn_akses_umum');
-                localStorage.removeItem('kkn_akses_keuangan');
+                localStorage.removeItem('kkn_akses_key');
                 window.location.reload();
             }
         }
