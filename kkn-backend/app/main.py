@@ -126,8 +126,8 @@ def read_root():
 # ENDPOINT: ABSENSI (Scan QR Pagi & Malam)
 # ==========================================
 
-ABSEN_PAGI_MULAI = 6
-ABSEN_PAGI_SELESAI = 9
+ABSEN_PAGI_MULAI = 7
+ABSEN_PAGI_SELESAI = 10
 ABSEN_MALAM_MULAI = 19
 ABSEN_MALAM_SELESAI = 22
 
