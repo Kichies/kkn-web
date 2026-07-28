@@ -38,18 +38,15 @@ app.add_middleware(
 # ==========================================
 # KONFIGURASI AKSES (Poin 6: Proteksi Backend)
 # ==========================================
-# Bisa dioverride lewat Environment Variables di Vercel kalau mau ganti tanpa ubah kode.
 KUNCI_UMUM = os.getenv("ADMIN_KEY_UMUM", "190726OK")
 KUNCI_BPH = os.getenv("ADMIN_KEY_BPH", "190726BPH")
 
 def verifikasi_akses_umum(x_akses_key: str = Header(None)):
-    """Dipakai untuk endpoint yang boleh diubah anggota biasa (logbook, proker)."""
     if x_akses_key not in (KUNCI_UMUM, KUNCI_BPH):
         raise HTTPException(status_code=403, detail="Akses ditolak. Silakan login sebagai pengurus dulu.")
     return x_akses_key
 
 def verifikasi_akses_keuangan(x_akses_key: str = Header(None)):
-    """Dipakai khusus endpoint keuangan (cashflow), hanya BPH yang boleh."""
     if x_akses_key != KUNCI_BPH:
         raise HTTPException(status_code=403, detail="Akses ditolak. Hanya BPH yang bisa mengelola keuangan.")
     return x_akses_key
@@ -65,7 +62,6 @@ if SUPABASE_URL and SUPABASE_KEY:
 else:
     print("PERINGATAN: SUPABASE_URL / SUPABASE_KEY belum di-set. Upload foto akan gagal.")
 
-# --- FUNGSI UPLOAD BASE64 KE SUPABASE STORAGE ---
 def process_base64_image(base64_str: str, request=None) -> str:
     """Ubah teks Base64 jadi file gambar, upload ke Supabase Storage, kembalikan URL publiknya"""
     if not base64_str or not base64_str.startswith("data:image"):
@@ -128,7 +124,6 @@ def read_root():
 
 # ==========================================
 # ENDPOINT: ABSENSI (Scan QR Pagi & Malam)
-# Catatan: sengaja TIDAK diproteksi, karena ini form publik buat semua anggota absen.
 # ==========================================
 
 ABSEN_PAGI_MULAI = 6
@@ -136,14 +131,20 @@ ABSEN_PAGI_SELESAI = 9
 ABSEN_MALAM_MULAI = 19
 ABSEN_MALAM_SELESAI = 22
 
+def tentukan_sesi(jam: int) -> str:
+    """Menentukan sesi absen berdasarkan jam. Return None kalau di luar window."""
+    if ABSEN_PAGI_MULAI <= jam < ABSEN_PAGI_SELESAI:
+        return "Pagi"
+    elif ABSEN_MALAM_MULAI <= jam < ABSEN_MALAM_SELESAI:
+        return "Malam"
+    return None
+
 @app.post("/api/absensi/", response_model=schemas.AbsensiResponse, tags=["Absensi"])
 def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)):
     jam = int(absensi.waktu.split(":")[0])
+    sesi = tentukan_sesi(jam)
 
-    dalam_window_pagi = ABSEN_PAGI_MULAI <= jam < ABSEN_PAGI_SELESAI
-    dalam_window_malam = ABSEN_MALAM_MULAI <= jam < ABSEN_MALAM_SELESAI
-
-    if not dalam_window_pagi and not dalam_window_malam:
+    if sesi is None:
         raise HTTPException(
             status_code=400,
             detail=(
@@ -153,6 +154,20 @@ def create_absensi(absensi: schemas.AbsensiCreate, db: Session = Depends(get_db)
                 f"Kelewat ya berarti gak bisa absen, disiplin dong!"
             )
         )
+
+    # --- CEK ABSEN DOBEL (Poin 2) ---
+    semua_absensi_hari_ini = db.query(models.Absensi).filter(
+        models.Absensi.user_id == absensi.user_id,
+        models.Absensi.tanggal == absensi.tanggal
+    ).all()
+
+    for a in semua_absensi_hari_ini:
+        jam_lama = int(a.waktu.split(":")[0])
+        if tentukan_sesi(jam_lama) == sesi:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Kamu sudah absen sesi {sesi} hari ini. Nggak bisa absen dobel ya!"
+            )
 
     db_absensi = models.Absensi(
         user_id=absensi.user_id,
@@ -179,7 +194,7 @@ def read_absensi(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
     return db.query(models.Absensi).order_by(models.Absensi.id.desc()).offset(skip).limit(limit).all()
 
 # ==========================================
-# ENDPOINT: LOGBOOK (Diproteksi: akses umum)
+# ENDPOINT: LOGBOOK
 # ==========================================
 @app.post("/api/logbook/", response_model=schemas.LogbookResponse, tags=["Logbook"])
 def create_logbook(logbook: schemas.LogbookCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
@@ -225,7 +240,7 @@ def update_logbook(id: int, logbook: schemas.LogbookCreate, db: Session = Depend
     return item
 
 # ==========================================
-# ENDPOINT: CASHFLOW (Diproteksi: khusus BPH)
+# ENDPOINT: CASHFLOW
 # ==========================================
 @app.post("/api/cashflow/", response_model=schemas.CashflowResponse, tags=["Cashflow"])
 def create_cashflow(cashflow: schemas.CashflowCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_keuangan)):
@@ -281,7 +296,7 @@ def update_cashflow(id: int, cashflow: schemas.CashflowCreate, db: Session = Dep
     return item
 
 # ==========================================
-# ENDPOINT: PROGRAM KERJA (Diproteksi: akses umum)
+# ENDPOINT: PROGRAM KERJA
 # ==========================================
 @app.post("/api/proker/", response_model=schemas.ProkerResponse, tags=["Proker"])
 def create_proker(proker: schemas.ProkerCreate, db: Session = Depends(get_db), _=Depends(verifikasi_akses_umum)):
